@@ -33,6 +33,27 @@ func main() {
 }
 
 func handler(w *response.Writer, req *request.Request) {
+
+	if req.RequestLine.RequestTarget == "/video" {
+		videoData, err := os.ReadFile("assets/vim.mp4")
+		if err != nil {
+			log.Printf("Error reading video file: %v", err)
+			w.WriteStatusLine(response.StatusCodeInternalServerError)
+			w.WriteHeaders(response.GetDefaultHeaders(0))
+			return
+		}
+
+		w.WriteStatusLine(response.StatusCodeSuccess)
+
+		h := response.GetDefaultHeaders(len(videoData))
+		h.Override("Content-Type", "video/mp4")
+
+		w.WriteHeaders(h)
+		w.WriteBody(videoData)
+
+		return
+	}
+
 	if req.RequestLine.RequestTarget == "/httpbin/html" {
 		targetURL := "https://httpbin.org/html"
 		proxyHtmlWithTrailers(w, targetURL)
