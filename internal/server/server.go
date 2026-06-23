@@ -65,5 +65,4 @@ func (s *Server) handle(conn net.Conn) {
 		return
 	}
 	s.handler(w, req)
-	return
 }

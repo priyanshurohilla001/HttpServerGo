@@ -15,13 +15,9 @@ func NewHeaders() Headers {
 	return map[string]string{}
 }
 
-func (h Headers) Get(key string) (string, bool) {
-	key = strings.ToLower(key)
-	v, ok := h[key]
-	return v, ok
-}
-
 func (h Headers) Parse(data []byte) (n int, done bool, err error) {
+	// print the data with crlf encoding
+
 	idx := bytes.Index(data, []byte(crlf))
 	if idx == -1 {
 		return 0, false, nil
@@ -35,7 +31,7 @@ func (h Headers) Parse(data []byte) (n int, done bool, err error) {
 	parts := bytes.SplitN(data[:idx], []byte(":"), 2)
 	key := strings.ToLower(string(parts[0]))
 
-	if key != strings.TrimSpace(key) {
+	if strings.ContainsAny(key, " \t") {
 		return 0, false, fmt.Errorf("invalid header name: %s", key)
 	}
 
@@ -48,10 +44,32 @@ func (h Headers) Parse(data []byte) (n int, done bool, err error) {
 	return idx + 2, false, nil
 }
 
+func (h Headers) Get(key string) (string, bool) {
+	key = strings.ToLower(key)
+	v, ok := h[key]
+	return v, ok
+}
+
 func (h Headers) Set(key, value string) {
 	key = strings.ToLower(key)
+	v, ok := h[key]
+	if ok {
+		value = strings.Join([]string{
+			v,
+			value,
+		}, ", ")
+	}
 	h[key] = value
+}
 
+func (h Headers) Override(key, value string) {
+	key = strings.ToLower(key)
+	h[key] = value
+}
+
+func (h Headers) Remove(key string) {
+	key = strings.ToLower(key)
+	delete(h, key)
 }
 
 var tokenChars = []byte{'!', '#', '$', '%', '&', '\'', '*', '+', '-', '.', '^', '_', '`', '|', '~'}
